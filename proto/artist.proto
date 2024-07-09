@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package artist;
+
+option go_package = "proto/";
+
+service ArtistService {
+  rpc CreateArtist(CreateArtistRequest) returns (CreateArtistResponse) {}
+}
+
+message CreateArtistRequest {
+  string name = 1;
+  string image_url = 2;
+}
+
+message CreateArtistResponse {
+  bool success = 1;
+  string id = 2;
+}
