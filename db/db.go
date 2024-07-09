@@ -14,7 +14,7 @@ func Init() {
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(&Artist{}, &Album{})
+	db.AutoMigrate(&Artist{}, &Album{}, &Image{})
 
 	DB = db
 }

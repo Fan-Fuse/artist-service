@@ -14,7 +14,7 @@ type Artist struct {
 	gorm.Model
 	Name        string
 	SpotifyID   string
-	Images      []Image `gorm:"polymorphic:Owner;"`
+	Images      []Image `gorm:"many2many:artist_images;"` // many to many relationship
 	Albums      []Album `gorm:"many2many:artist_albums;"` // many to many relationship
 	LastUpdated time.Time
 }
