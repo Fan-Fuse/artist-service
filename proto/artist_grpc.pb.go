@@ -8,6 +8,7 @@ package proto
 
 import (
 	context "context"
+	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -22,7 +23,14 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ArtistServiceClient interface {
-	CreateArtist(ctx context.Context, in *CreateArtistRequest, opts ...grpc.CallOption) (*CreateArtistResponse, error)
+	// Default CRUD operations
+	CreateArtist(ctx context.Context, in *Artist, opts ...grpc.CallOption) (*Id, error)
+	GetArtist(ctx context.Context, in *Id, opts ...grpc.CallOption) (*Artist, error)
+	GetArtists(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Artists, error)
+	UpdateArtist(ctx context.Context, in *Artist, opts ...grpc.CallOption) (*empty.Empty, error)
+	// Custom operations
+	GetReleases(ctx context.Context, in *Id, opts ...grpc.CallOption) (*Releases, error)
+	FilterArtists(ctx context.Context, in *ArtistFilter, opts ...grpc.CallOption) (*Artists, error)
 }
 
 type artistServiceClient struct {
@@ -33,9 +41,54 @@ func NewArtistServiceClient(cc grpc.ClientConnInterface) ArtistServiceClient {
 	return &artistServiceClient{cc}
 }
 
-func (c *artistServiceClient) CreateArtist(ctx context.Context, in *CreateArtistRequest, opts ...grpc.CallOption) (*CreateArtistResponse, error) {
-	out := new(CreateArtistResponse)
+func (c *artistServiceClient) CreateArtist(ctx context.Context, in *Artist, opts ...grpc.CallOption) (*Id, error) {
+	out := new(Id)
 	err := c.cc.Invoke(ctx, "/artist.ArtistService/CreateArtist", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *artistServiceClient) GetArtist(ctx context.Context, in *Id, opts ...grpc.CallOption) (*Artist, error) {
+	out := new(Artist)
+	err := c.cc.Invoke(ctx, "/artist.ArtistService/GetArtist", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *artistServiceClient) GetArtists(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Artists, error) {
+	out := new(Artists)
+	err := c.cc.Invoke(ctx, "/artist.ArtistService/GetArtists", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *artistServiceClient) UpdateArtist(ctx context.Context, in *Artist, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/artist.ArtistService/UpdateArtist", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *artistServiceClient) GetReleases(ctx context.Context, in *Id, opts ...grpc.CallOption) (*Releases, error) {
+	out := new(Releases)
+	err := c.cc.Invoke(ctx, "/artist.ArtistService/GetReleases", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *artistServiceClient) FilterArtists(ctx context.Context, in *ArtistFilter, opts ...grpc.CallOption) (*Artists, error) {
+	out := new(Artists)
+	err := c.cc.Invoke(ctx, "/artist.ArtistService/FilterArtists", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +99,14 @@ func (c *artistServiceClient) CreateArtist(ctx context.Context, in *CreateArtist
 // All implementations must embed UnimplementedArtistServiceServer
 // for forward compatibility
 type ArtistServiceServer interface {
-	CreateArtist(context.Context, *CreateArtistRequest) (*CreateArtistResponse, error)
+	// Default CRUD operations
+	CreateArtist(context.Context, *Artist) (*Id, error)
+	GetArtist(context.Context, *Id) (*Artist, error)
+	GetArtists(context.Context, *empty.Empty) (*Artists, error)
+	UpdateArtist(context.Context, *Artist) (*empty.Empty, error)
+	// Custom operations
+	GetReleases(context.Context, *Id) (*Releases, error)
+	FilterArtists(context.Context, *ArtistFilter) (*Artists, error)
 	mustEmbedUnimplementedArtistServiceServer()
 }
 
@@ -54,8 +114,23 @@ type ArtistServiceServer interface {
 type UnimplementedArtistServiceServer struct {
 }
 
-func (UnimplementedArtistServiceServer) CreateArtist(context.Context, *CreateArtistRequest) (*CreateArtistResponse, error) {
+func (UnimplementedArtistServiceServer) CreateArtist(context.Context, *Artist) (*Id, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateArtist not implemented")
+}
+func (UnimplementedArtistServiceServer) GetArtist(context.Context, *Id) (*Artist, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetArtist not implemented")
+}
+func (UnimplementedArtistServiceServer) GetArtists(context.Context, *empty.Empty) (*Artists, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetArtists not implemented")
+}
+func (UnimplementedArtistServiceServer) UpdateArtist(context.Context, *Artist) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateArtist not implemented")
+}
+func (UnimplementedArtistServiceServer) GetReleases(context.Context, *Id) (*Releases, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReleases not implemented")
+}
+func (UnimplementedArtistServiceServer) FilterArtists(context.Context, *ArtistFilter) (*Artists, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FilterArtists not implemented")
 }
 func (UnimplementedArtistServiceServer) mustEmbedUnimplementedArtistServiceServer() {}
 
@@ -71,7 +146,7 @@ func RegisterArtistServiceServer(s grpc.ServiceRegistrar, srv ArtistServiceServe
 }
 
 func _ArtistService_CreateArtist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateArtistRequest)
+	in := new(Artist)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -83,7 +158,97 @@ func _ArtistService_CreateArtist_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/artist.ArtistService/CreateArtist",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ArtistServiceServer).CreateArtist(ctx, req.(*CreateArtistRequest))
+		return srv.(ArtistServiceServer).CreateArtist(ctx, req.(*Artist))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ArtistService_GetArtist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Id)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ArtistServiceServer).GetArtist(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/artist.ArtistService/GetArtist",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ArtistServiceServer).GetArtist(ctx, req.(*Id))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ArtistService_GetArtists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ArtistServiceServer).GetArtists(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/artist.ArtistService/GetArtists",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ArtistServiceServer).GetArtists(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ArtistService_UpdateArtist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Artist)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ArtistServiceServer).UpdateArtist(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/artist.ArtistService/UpdateArtist",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ArtistServiceServer).UpdateArtist(ctx, req.(*Artist))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ArtistService_GetReleases_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Id)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ArtistServiceServer).GetReleases(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/artist.ArtistService/GetReleases",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ArtistServiceServer).GetReleases(ctx, req.(*Id))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ArtistService_FilterArtists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ArtistFilter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ArtistServiceServer).FilterArtists(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/artist.ArtistService/FilterArtists",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ArtistServiceServer).FilterArtists(ctx, req.(*ArtistFilter))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -98,6 +263,26 @@ var ArtistService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateArtist",
 			Handler:    _ArtistService_CreateArtist_Handler,
+		},
+		{
+			MethodName: "GetArtist",
+			Handler:    _ArtistService_GetArtist_Handler,
+		},
+		{
+			MethodName: "GetArtists",
+			Handler:    _ArtistService_GetArtists_Handler,
+		},
+		{
+			MethodName: "UpdateArtist",
+			Handler:    _ArtistService_UpdateArtist_Handler,
+		},
+		{
+			MethodName: "GetReleases",
+			Handler:    _ArtistService_GetReleases_Handler,
+		},
+		{
+			MethodName: "FilterArtists",
+			Handler:    _ArtistService_FilterArtists_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

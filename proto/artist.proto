@@ -4,16 +4,63 @@ package artist;
 
 option go_package = "proto/";
 
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
 service ArtistService {
-  rpc CreateArtist(CreateArtistRequest) returns (CreateArtistResponse) {}
+  // Default CRUD operations
+  rpc CreateArtist(Artist) returns (Id) {} // Create a new artist
+  rpc GetArtist(Id) returns (Artist) {} // Get a single artist by id
+  rpc GetArtists(google.protobuf.Empty) returns (Artists) {} // Get all artists
+  rpc UpdateArtist(Artist) returns (google.protobuf.Empty) {} // Update an artist (including albums)
+  // Custom operations
+  rpc GetReleases(Id) returns (Releases) {} // Get all releases for an artist, unsure if we will use this
+  rpc FilterArtists(ArtistFilter) returns (Artists) {} // Filter artists based on criteria
 }
 
-message CreateArtistRequest {
+message Artist {
+  string id = 1;
+  string name = 2;
+  repeated Image images = 3;
+  repeated Album albums = 4;
+  Externals externals = 5;
+  google.protobuf.Timestamp last_updated = 6;
+}
+
+message Image {
+  string url = 1;
+  int32 width = 2;
+  int32 height = 3;
+}
+
+message Album {
+  string id = 1;
+  string name = 2;
+  repeated Image images = 3;
+  google.protobuf.Timestamp release_date = 4;
+  string type = 5;
+  Externals externals = 6;
+}
+
+message Externals {
+  string spotify = 1;
+}
+
+message Id {
+  string id = 1;
+}
+
+message Artists {
+  repeated Artist artists = 1;
+}
+
+message Releases {
+  repeated Album albums = 1;
+}
+
+message ArtistFilter {
   string name = 1;
-  string image_url = 2;
-}
-
-message CreateArtistResponse {
-  bool success = 1;
-  string id = 2;
+  google.protobuf.Timestamp last_updated = 2;
+  bool last_updated_gt = 3; // Last updated greater than
+  // Add more filter criteria as needed
 }
